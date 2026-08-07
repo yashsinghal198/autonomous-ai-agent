@@ -55,20 +55,17 @@ function supabasePost(endpoint, bodyData) {
 
 exports.handler = async (event) => {
   try {
-    // 1. Get active agents
     const agents = await supabaseGet('agents?select=*');
     if (!Array.isArray(agents) || agents.length === 0) {
       return { statusCode: 200, body: 'No active agents found.' };
     }
 
-    // 2. Select 1 agent randomly
     const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
 
-    // 3. Retrieve existing posts to prevent duplicate content
-    const existingPosts = await supabaseGet(`posts?agent_id=eq.${selectedAgent.id}&select=content`);
-    const publishedTexts = Array.isArray(existingPosts) ? existingPosts.map(p => p.content) : [];
+    // Global memory check across ALL posts regardless of agent ID
+    const allPosts = await supabaseGet('posts?select=content');
+    const globalPublishedTexts = Array.isArray(allPosts) ? allPosts.map(p => p.content) : [];
 
-    // 4. Expanded topic library
     const topicTemplates = [
       {
         text: "Analyzing novel prompt injection vectors in autonomous LLM agents.",
@@ -99,27 +96,35 @@ exports.handler = async (event) => {
         text: "Mitigating side-channel inference leakage in browser-based AI sidecars.",
         rationale: "Critical security focus area given the expansion of desktop and browser AI integrations.",
         sources: ["https://nvd.nist.gov"]
+      },
+      {
+        text: "Formal verification of agentic goal alignment in long-horizon autonomous tasks.",
+        rationale: "Focusing on preventing specification drift in multi-step task execution chains.",
+        sources: ["https://arxiv.org/abs/2402.00123"]
+      },
+      {
+        text: "Assessing memory poisoning resilience in persistent Vector DB stores.",
+        rationale: "Crucial for preventing long-term behavioral corruption in autonomous agents.",
+        sources: ["https://github.com/advisories"]
       }
     ];
 
-    // Filter out topics already published for this agent
-    let availableTopics = topicTemplates.filter(t => !publishedTexts.includes(t.text));
+    let availableTopics = topicTemplates.filter(t => !globalPublishedTexts.includes(t.text));
 
     let selectedTopic;
     if (availableTopics.length > 0) {
       selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
     } else {
-      // If all template texts exist, generate a dynamic variation with sequence marker
+      // Dynamic generation with unique run ID if standard list is exhausted
       const baseTopic = topicTemplates[Math.floor(Math.random() * topicTemplates.length)];
-      const runTimestamp = new Date().toISOString().substring(11, 19);
+      const randomId = Math.random().toString(36).substring(2, 7).toUpperCase();
       selectedTopic = {
-        text: `${baseTopic.text} (Analysis iteration ${runTimestamp} UTC)`,
+        text: `${baseTopic.text} [Analysis Ref #${randomId}]`,
         rationale: baseTopic.rationale,
         sources: baseTopic.sources
       };
     }
 
-    // 5. Post unique content to Supabase
     await supabasePost('posts', {
       agent_id: selectedAgent.id,
       content: selectedTopic.text,
@@ -127,7 +132,7 @@ exports.handler = async (event) => {
       sources: selectedTopic.sources
     });
 
-    return { statusCode: 200, body: 'Unique autonomous post published successfully.' };
+    return { statusCode: 200, body: 'Global unique post published.' };
   } catch (err) {
     return { statusCode: 500, body: err.message };
   }
