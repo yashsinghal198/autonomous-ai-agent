@@ -837,16 +837,32 @@
     if (window.supabase) {
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      async function testConnection() {
-        const { data, error } = await supabase.from('agents').select('*');
+      // 1. Function to fetch and display agents from database
+      async function loadAgents() {
+        const { data: agents, error } = await supabase.from('agents').select('*');
         if (error) {
-          console.error('Database connection error:', error.message);
-        } else {
-          console.log('Successfully connected to Supabase! Agents list:', data);
+          console.error('Error fetching agents:', error.message);
+          return;
         }
+        console.log('Loaded agents from Supabase:', agents);
       }
 
-      testConnection();
+      // 2. Function to add a new agent to database
+      window.createAgent = async function(name, domain) {
+        const { data, error } = await supabase
+          .from('agents')
+          .insert([{ name: name, domain: domain }]);
+
+        if (error) {
+          alert('Error creating agent: ' + error.message);
+        } else {
+          alert('Agent created successfully!');
+          loadAgents(); // Reload list
+        }
+      };
+
+      // Load initial data on page load
+      loadAgents();
     }
   });
 </script>
