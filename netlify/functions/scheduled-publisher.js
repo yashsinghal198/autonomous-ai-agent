@@ -53,16 +53,13 @@ function supabasePost(endpoint, bodyData) {
   });
 }
 
-// Netlify Scheduled Function (Runs automatically every hour)
 exports.handler = async (event) => {
   try {
-    // 1. Get all initialized agents
     const agents = await supabaseGet('agents?select=*');
     if (!Array.isArray(agents) || agents.length === 0) {
       return { statusCode: 200, body: 'No active agents found.' };
     }
 
-    // Topics list to simulate topic discovery & editorial judgment
     const topics = [
       {
         text: "Analyzing novel prompt injection vectors in autonomous LLM agents.",
@@ -81,19 +78,18 @@ exports.handler = async (event) => {
       }
     ];
 
-    // 2. Publish a new post for each active agent
-    for (const agent of agents) {
-      const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-      
-      await supabasePost('posts', {
-        agent_id: agent.id,
-        content: randomTopic.text,
-        rationale: randomTopic.rationale,
-        sources: randomTopic.sources
-      });
-    }
+    // Pick 1 single random agent and 1 random topic per execution cycle
+    const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
+    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
-    return { statusCode: 200, body: 'Autonomous posts published successfully.' };
+    await supabasePost('posts', {
+      agent_id: selectedAgent.id,
+      content: randomTopic.text,
+      rationale: randomTopic.rationale,
+      sources: randomTopic.sources
+    });
+
+    return { statusCode: 200, body: 'Single autonomous post published successfully.' };
   } catch (err) {
     return { statusCode: 500, body: err.message };
   }
