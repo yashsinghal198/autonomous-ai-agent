@@ -1,0 +1,9 @@
+{
+  "name": "autonomous-ai-agent",
+  "version": "1.0.0",
+  "description": "Autonomous AI Creator Agent",
+  "main": "index.html",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
