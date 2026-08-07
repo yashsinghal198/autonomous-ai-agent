@@ -837,51 +837,49 @@
     if (window.supabase) {
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // 1. Function to fetch agents and display them on the dashboard UI
-      async function loadAgents() {
-        const { data: agents, error } = await supabase.from('agents').select('*');
-        
-        if (error) {
-          console.error('Error fetching agents:', error.message);
-          return;
-        }
+      async function loadDashboard() {
+        // Fetch Agents
+        const { data: agents } = await supabase.from('agents').select('*');
+        // Fetch Posts (newest first)
+        const { data: posts } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
 
-        console.log('Loaded agents:', agents);
-
-        // Find or create an element to render the list
-        let container = document.getElementById('supabase-agents-container');
+        let container = document.getElementById('supabase-feed-container');
         if (!container) {
           container = document.createElement('div');
-          container.id = 'supabase-agents-container';
-          container.style.cssText = 'margin: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-family: sans-serif; color: #fff;';
+          container.id = 'supabase-feed-container';
+          container.style.cssText = 'margin: 20px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 8px; font-family: sans-serif; color: #fff;';
           document.body.appendChild(container);
         }
 
+        let html = '<h2>Live Agent Feed & Database Activity</h2>';
+        
+        // Render Agents
+        html += '<h3>Active Agents</h3>';
         if (agents && agents.length > 0) {
-          container.innerHTML = '<h3>Live Agents from Supabase:</h3>' + 
-            agents.map(a => `<div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
-              <strong>${a.name}</strong> — <em>${a.domain || 'General Domain'}</em> (Status: ${a.status || 'Active'})
-            </div>`).join('');
+          html += agents.map(a => `<div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <strong>${a.name}</strong> (${a.domain || 'General AI'}) — ID: <code>${a.id}</code>
+          </div>`).join('');
         } else {
-          container.innerHTML = '<h3>Live Agents from Supabase:</h3><p>No agents in database yet.</p>';
+          html += '<p>No agents initialized yet.</p>';
         }
+
+        // Render Posts
+        html += '<h3 style="margin-top:20px;">Published Posts Feed</h3>';
+        if (posts && posts.length > 0) {
+          html += posts.map(p => `<div style="padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.03); border-left: 3px solid #00E5FF; border-radius: 4px;">
+            <p style="margin:0 0 8px 0; font-size: 1.1em;">"${p.content}"</p>
+            <p style="margin:0; font-size: 0.85em; opacity: 0.8;"><strong>Rationale:</strong> ${p.rationale || 'Editorial decision'}</p>
+            <p style="margin:4px 0 0 0; font-size: 0.75em; opacity: 0.5;">Posted: ${new Date(p.created_at).toLocaleString()}</p>
+          </div>`).join('');
+        } else {
+          html += '<p>No posts published yet.</p>';
+        }
+
+        container.innerHTML = html;
       }
 
-      // 2. Global helper function to create new agents
-      window.createAgent = async function(name, domain) {
-        const { data, error } = await supabase
-          .from('agents')
-          .insert([{ name: name, domain: domain }]);
-
-        if (error) {
-          alert('Error creating agent: ' + error.message);
-        } else {
-          alert('Agent created successfully!');
-          loadAgents(); // Reload and render updated list
-        }
-      };
-
-      loadAgents();
+      loadDashboard();
+      setInterval(loadDashboard, 15000); // Auto-refresh UI every 15s
     }
   });
 </script>
