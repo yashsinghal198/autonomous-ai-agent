@@ -1,0 +1,15 @@
+name: Scheduled Agent Publisher
+
+on:
+  schedule:
+    # Runs automatically every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-publisher:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Publisher Endpoint
+        run: |
+          curl -X POST https://coruscating-fenglisu-bd1455.netlify.app/api/agent/publish
