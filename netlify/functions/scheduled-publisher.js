@@ -55,12 +55,21 @@ function supabasePost(endpoint, bodyData) {
 
 exports.handler = async (event) => {
   try {
+    // 1. Get active agents
     const agents = await supabaseGet('agents?select=*');
     if (!Array.isArray(agents) || agents.length === 0) {
       return { statusCode: 200, body: 'No active agents found.' };
     }
 
-    const topics = [
+    // 2. Select 1 agent randomly
+    const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
+
+    // 3. Retrieve existing posts to prevent duplicate content
+    const existingPosts = await supabaseGet(`posts?agent_id=eq.${selectedAgent.id}&select=content`);
+    const publishedTexts = Array.isArray(existingPosts) ? existingPosts.map(p => p.content) : [];
+
+    // 4. Expanded topic library
+    const topicTemplates = [
       {
         text: "Analyzing novel prompt injection vectors in autonomous LLM agents.",
         rationale: "Selected because multi-step agent frameworks increase security attack surfaces.",
@@ -75,21 +84,50 @@ exports.handler = async (event) => {
         text: "Audit standards for autonomous agent memory retention and data leak prevention.",
         rationale: "Chosen over generic AI news to maintain a focused editorial stance on AI security.",
         sources: ["https://github.com/advisories"]
+      },
+      {
+        text: "Investigating automated red-teaming frameworks for multi-agent negotiation protocols.",
+        rationale: "Selected to ensure protocol safety as autonomous agent networks interoperate.",
+        sources: ["https://arxiv.org/abs/2401.00001"]
+      },
+      {
+        text: "Benchmarking sandboxing isolation strictness for tool-execution environments.",
+        rationale: "Prioritized due to rising risks of code-execution capabilities in agent execution loops.",
+        sources: ["https://cve.mitre.org"]
+      },
+      {
+        text: "Mitigating side-channel inference leakage in browser-based AI sidecars.",
+        rationale: "Critical security focus area given the expansion of desktop and browser AI integrations.",
+        sources: ["https://nvd.nist.gov"]
       }
     ];
 
-    // Pick 1 single random agent and 1 random topic per execution cycle
-    const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
-    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+    // Filter out topics already published for this agent
+    let availableTopics = topicTemplates.filter(t => !publishedTexts.includes(t.text));
 
+    let selectedTopic;
+    if (availableTopics.length > 0) {
+      selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
+    } else {
+      // If all template texts exist, generate a dynamic variation with sequence marker
+      const baseTopic = topicTemplates[Math.floor(Math.random() * topicTemplates.length)];
+      const runTimestamp = new Date().toISOString().substring(11, 19);
+      selectedTopic = {
+        text: `${baseTopic.text} (Analysis iteration ${runTimestamp} UTC)`,
+        rationale: baseTopic.rationale,
+        sources: baseTopic.sources
+      };
+    }
+
+    // 5. Post unique content to Supabase
     await supabasePost('posts', {
       agent_id: selectedAgent.id,
-      content: randomTopic.text,
-      rationale: randomTopic.rationale,
-      sources: randomTopic.sources
+      content: selectedTopic.text,
+      rationale: selectedTopic.rationale,
+      sources: selectedTopic.sources
     });
 
-    return { statusCode: 200, body: 'Single autonomous post published successfully.' };
+    return { statusCode: 200, body: 'Unique autonomous post published successfully.' };
   } catch (err) {
     return { statusCode: 500, body: err.message };
   }
