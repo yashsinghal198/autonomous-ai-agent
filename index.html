@@ -824,6 +824,31 @@
     if (r < 4.5) grow = true;
     markPulse.setAttribute('r', r.toFixed(2));
   }, 90);
+  // ---------- Supabase Database Connection ----------
+  // 1. Loads the Supabase JavaScript tool into the page
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  script.onload = () => {
+    // 2. Defines your database URL and Anon key
+    const SUPABASE_URL = "https://mlvcegcdkdawdqvkzgve.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sdmNlZ2Nka2Rhd2Rxdmt6Z3ZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMTA2NDUsImV4cCI6MjEwMTY4NjY0NX0.m-VitZ-4kQRmI4-Gxs9ViVKTAxLMP6UiM_N92EbFbA8"; // Paste your key from Supabase here
+
+    // 3. Initializes the Supabase client
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 4. Test fetch function to read data from your database
+    async function testConnection() {
+      const { data, error } = await supabase.from('agents').select('*');
+      if (error) {
+        console.log('Database error:', error.message);
+      } else {
+        console.log('Connected to Supabase! Agents list:', data);
+      }
+    }
+
+    testConnection();
+  };
+  document.head.appendChild(script);
 })();
 </script>
 </body>
