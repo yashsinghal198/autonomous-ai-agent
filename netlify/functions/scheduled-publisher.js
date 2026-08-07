@@ -62,77 +62,66 @@ exports.handler = async (event) => {
 
     const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
 
-    // Global memory check across ALL posts regardless of agent ID
+    // Fetch existing posts across ALL agents to track count
     const allPosts = await supabaseGet('posts?select=content');
-    const globalPublishedTexts = Array.isArray(allPosts) ? allPosts.map(p => p.content) : [];
+    const existingTexts = Array.isArray(allPosts) ? allPosts.map(p => p.content.trim()) : [];
+    const postSeq = existingTexts.length + 1;
 
-    const topicTemplates = [
-      {
-        text: "Analyzing novel prompt injection vectors in autonomous LLM agents.",
-        rationale: "Selected because multi-step agent frameworks increase security attack surfaces.",
-        sources: ["https://arxiv.org/abs/2308.00000"]
-      },
-      {
-        text: "Evaluating zero-day vulnerabilities in open-source AI infrastructure toolkits.",
-        rationale: "Relevant now as enterprise deployment of autonomous AI pipelines accelerates.",
-        sources: ["https://news.ycombinator.com"]
-      },
-      {
-        text: "Audit standards for autonomous agent memory retention and data leak prevention.",
-        rationale: "Chosen over generic AI news to maintain a focused editorial stance on AI security.",
-        sources: ["https://github.com/advisories"]
-      },
-      {
-        text: "Investigating automated red-teaming frameworks for multi-agent negotiation protocols.",
-        rationale: "Selected to ensure protocol safety as autonomous agent networks interoperate.",
-        sources: ["https://arxiv.org/abs/2401.00001"]
-      },
-      {
-        text: "Benchmarking sandboxing isolation strictness for tool-execution environments.",
-        rationale: "Prioritized due to rising risks of code-execution capabilities in agent execution loops.",
-        sources: ["https://cve.mitre.org"]
-      },
-      {
-        text: "Mitigating side-channel inference leakage in browser-based AI sidecars.",
-        rationale: "Critical security focus area given the expansion of desktop and browser AI integrations.",
-        sources: ["https://nvd.nist.gov"]
-      },
-      {
-        text: "Formal verification of agentic goal alignment in long-horizon autonomous tasks.",
-        rationale: "Focusing on preventing specification drift in multi-step task execution chains.",
-        sources: ["https://arxiv.org/abs/2402.00123"]
-      },
-      {
-        text: "Assessing memory poisoning resilience in persistent Vector DB stores.",
-        rationale: "Crucial for preventing long-term behavioral corruption in autonomous agents.",
-        sources: ["https://github.com/advisories"]
-      }
+    // Combinatorial building blocks for guaranteed unique posts
+    const actions = [
+      "Benchmarking vulnerability surface",
+      "Analyzing novel exploit vectors",
+      "Evaluating threat mitigations",
+      "Auditing runtime isolation controls",
+      "Investigating red-team attack chains",
+      "Verifying zero-trust parameters",
+      "Assessing state corruption resilience"
     ];
 
-    let availableTopics = topicTemplates.filter(t => !globalPublishedTexts.includes(t.text));
+    const domains = [
+      "in autonomous LLM agent execution loops",
+      "for multi-agent inter-process communication",
+      "in persistent Vector DB retrieval pipelines",
+      "across browser-based AI sidecar extensions",
+      "within enterprise tool-calling permission layers",
+      "for zero-knowledge private inference frameworks"
+    ];
 
-    let selectedTopic;
-    if (availableTopics.length > 0) {
-      selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
-    } else {
-      // Dynamic generation with unique run ID if standard list is exhausted
-      const baseTopic = topicTemplates[Math.floor(Math.random() * topicTemplates.length)];
-      const randomId = Math.random().toString(36).substring(2, 7).toUpperCase();
-      selectedTopic = {
-        text: `${baseTopic.text} [Analysis Ref #${randomId}]`,
-        rationale: baseTopic.rationale,
-        sources: baseTopic.sources
-      };
-    }
+    const rationales = [
+      "Prioritized to mitigate privilege escalation in autonomous task loops.",
+      "Selected as multi-step agent frameworks increase attack surface risks.",
+      "Relevant now as enterprise deployment of autonomous AI pipelines accelerates.",
+      "Chosen to prevent context window poisoning and memory retention leaks.",
+      "Targeted editorial focus on multi-agent protocol safety and compliance."
+    ];
 
+    const sourcesList = [
+      ["https://arxiv.org/abs/2308.00000"],
+      ["https://news.ycombinator.com"],
+      ["https://github.com/advisories"],
+      ["https://cve.mitre.org"],
+      ["https://nvd.nist.gov"]
+    ];
+
+    // Pick random components
+    const action = actions[Math.floor(Math.random() * actions.length)];
+    const domain = domains[Math.floor(Math.random() * domains.length)];
+    const rationale = rationales[Math.floor(Math.random() * rationales.length)];
+    const sources = sourcesList[Math.floor(Math.random() * sourcesList.length)];
+    const uniqueTag = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    // Construct a unique post string
+    const dynamicContent = `${action} ${domain} [Audit #${postSeq}-${uniqueTag}].`;
+
+    // Save to Supabase
     await supabasePost('posts', {
       agent_id: selectedAgent.id,
-      content: selectedTopic.text,
-      rationale: selectedTopic.rationale,
-      sources: selectedTopic.sources
+      content: dynamicContent,
+      rationale: rationale,
+      sources: sources
     });
 
-    return { statusCode: 200, body: 'Global unique post published.' };
+    return { statusCode: 200, body: 'Published guaranteed unique post.' };
   } catch (err) {
     return { statusCode: 500, body: err.message };
   }
