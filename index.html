@@ -837,17 +837,37 @@
     if (window.supabase) {
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // 1. Function to fetch and display agents from database
+      // 1. Function to fetch agents and display them on the dashboard UI
       async function loadAgents() {
         const { data: agents, error } = await supabase.from('agents').select('*');
+        
         if (error) {
           console.error('Error fetching agents:', error.message);
           return;
         }
-        console.log('Loaded agents from Supabase:', agents);
+
+        console.log('Loaded agents:', agents);
+
+        // Find or create an element to render the list
+        let container = document.getElementById('supabase-agents-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'supabase-agents-container';
+          container.style.cssText = 'margin: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-family: sans-serif; color: #fff;';
+          document.body.appendChild(container);
+        }
+
+        if (agents && agents.length > 0) {
+          container.innerHTML = '<h3>Live Agents from Supabase:</h3>' + 
+            agents.map(a => `<div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <strong>${a.name}</strong> — <em>${a.domain || 'General Domain'}</em> (Status: ${a.status || 'Active'})
+            </div>`).join('');
+        } else {
+          container.innerHTML = '<h3>Live Agents from Supabase:</h3><p>No agents in database yet.</p>';
+        }
       }
 
-      // 2. Function to add a new agent to database
+      // 2. Global helper function to create new agents
       window.createAgent = async function(name, domain) {
         const { data, error } = await supabase
           .from('agents')
@@ -857,11 +877,10 @@
           alert('Error creating agent: ' + error.message);
         } else {
           alert('Agent created successfully!');
-          loadAgents(); // Reload list
+          loadAgents(); // Reload and render updated list
         }
       };
 
-      // Load initial data on page load
       loadAgents();
     }
   });
