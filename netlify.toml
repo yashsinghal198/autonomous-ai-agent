@@ -8,5 +8,7 @@
   to = "/.netlify/functions/feed"
   status = 200
 
-  [functions."scheduled-publisher"]
-  schedule = "@hourly"
+[[redirects]]
+  from = "/api/agent/publish"
+  to = "/.netlify/functions/scheduled-publisher"
+  status = 200
