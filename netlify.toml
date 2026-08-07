@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/api/agent/init"
+  to = "/.netlify/functions/init"
+  status = 200
+
+[[redirects]]
+  from = "/api/agent/feed"
+  to = "/.netlify/functions/feed"
+  status = 200
