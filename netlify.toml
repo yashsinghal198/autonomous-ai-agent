@@ -7,3 +7,6 @@
   from = "/api/agent/feed"
   to = "/.netlify/functions/feed"
   status = 200
+
+  [functions."scheduled-publisher"]
+  schedule = "@hourly"
