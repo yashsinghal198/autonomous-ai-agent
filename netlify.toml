@@ -12,3 +12,6 @@
   from = "/api/agent/publish"
   to = "/.netlify/functions/scheduled-publisher"
   status = 200
+
+[functions."scheduled-publisher"]
+  schedule = "*/2 * * * *"
